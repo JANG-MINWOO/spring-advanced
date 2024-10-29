@@ -3,6 +3,7 @@ package org.example.expert.domain.manager.service;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
+import org.example.expert.domain.common.exist.ExistCheck;
 import org.example.expert.domain.manager.dto.request.ManagerSaveRequest;
 import org.example.expert.domain.manager.dto.response.ManagerResponse;
 import org.example.expert.domain.manager.dto.response.ManagerSaveResponse;
@@ -28,13 +29,13 @@ public class ManagerService {
     private final ManagerRepository managerRepository;
     private final UserRepository userRepository;
     private final TodoRepository todoRepository;
+    private ExistCheck existCheck;
 
     @Transactional
     public ManagerSaveResponse saveManager(AuthUser authUser, long todoId, ManagerSaveRequest managerSaveRequest) {
         // 일정을 만든 유저
         User user = User.fromAuthUser(authUser);
-        Todo todo = todoRepository.findById(todoId)
-                .orElseThrow(() -> new InvalidRequestException("Todo not found"));
+        Todo todo = existCheck.isExistTodo(todoId);
 
         if (!ObjectUtils.nullSafeEquals(user.getId(), todo.getUser().getId())) {
             throw new InvalidRequestException("담당자를 등록하려고 하는 유저가 일정을 만든 유저가 유효하지 않습니다.");
@@ -50,43 +51,33 @@ public class ManagerService {
         Manager newManagerUser = new Manager(managerUser, todo);
         Manager savedManagerUser = managerRepository.save(newManagerUser);
 
-        return new ManagerSaveResponse(
-                savedManagerUser.getId(),
-                new UserResponse(managerUser.getId(), managerUser.getEmail())
-        );
+        return new ManagerSaveResponse(savedManagerUser.getId(), new UserResponse(managerUser));
     }
 
     public List<ManagerResponse> getManagers(long todoId) {
-        Todo todo = todoRepository.findById(todoId)
-                .orElseThrow(() -> new InvalidRequestException("Todo not found"));
+        Todo todo = existCheck.isExistTodo(todoId);
 
         List<Manager> managerList = managerRepository.findByTodoIdWithUser(todo.getId());
 
         List<ManagerResponse> dtoList = new ArrayList<>();
         for (Manager manager : managerList) {
             User user = manager.getUser();
-            dtoList.add(new ManagerResponse(
-                    manager.getId(),
-                    new UserResponse(user.getId(), user.getEmail())
-            ));
+            dtoList.add(new ManagerResponse(manager.getId(), new UserResponse(user)));
         }
         return dtoList;
     }
 
     @Transactional
     public void deleteManager(long userId, long todoId, long managerId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidRequestException("User not found"));
+        User user = existCheck.isExistUser(userId);
 
-        Todo todo = todoRepository.findById(todoId)
-                .orElseThrow(() -> new InvalidRequestException("Todo not found"));
+        Todo todo = existCheck.isExistTodo(todoId);
 
         if (todo.getUser() == null || !ObjectUtils.nullSafeEquals(user.getId(), todo.getUser().getId())) {
             throw new InvalidRequestException("해당 일정을 만든 유저가 유효하지 않습니다.");
         }
 
-        Manager manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new InvalidRequestException("Manager not found"));
+        Manager manager = existCheck.isExistManager(managerId);
 
         if (!ObjectUtils.nullSafeEquals(todo.getId(), manager.getTodo().getId())) {
             throw new InvalidRequestException("해당 일정에 등록된 담당자가 아닙니다.");

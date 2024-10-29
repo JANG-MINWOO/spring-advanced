@@ -3,6 +3,7 @@ package org.example.expert.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.config.PasswordEncoder;
 import org.example.expert.domain.common.exception.InvalidRequestException;
+import org.example.expert.domain.common.exist.ExistCheck;
 import org.example.expert.domain.user.dto.request.UserChangePasswordRequest;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
@@ -17,16 +18,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private ExistCheck existCheck;
 
     public UserResponse getUser(long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidRequestException("User not found"));
-        return new UserResponse(user.getId(), user.getEmail());
+        User user = existCheck.isExistUser(userId);
+        return new UserResponse(user);
     }
 
     @Transactional
     public void changePassword(long userId, UserChangePasswordRequest userChangePasswordRequest) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidRequestException("User not found"));
+        User user = existCheck.isExistUser(userId);
+
         if (!passwordEncoder.matches(userChangePasswordRequest.getOldPassword(), user.getPassword())) {
             throw new InvalidRequestException("잘못된 비밀번호입니다.");
         }

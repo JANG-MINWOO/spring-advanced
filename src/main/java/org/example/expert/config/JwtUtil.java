@@ -7,7 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.example.expert.domain.common.exception.ServerException;
-import org.example.expert.domain.user.enums.UserRole;
+import org.example.expert.domain.user.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -34,14 +34,14 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    public String createToken(Long userId, String email, UserRole userRole) {
+    public String createToken(User user) {
         Date date = new Date();
 
         return BEARER_PREFIX +
                 Jwts.builder()
-                        .setSubject(String.valueOf(userId))
-                        .claim("email", email)
-                        .claim("userRole", userRole)
+                        .setSubject(String.valueOf(user.getId()))
+                        .claim("email", user.getEmail())
+                        .claim("userRole", user.getUserRole())
                         .setExpiration(new Date(date.getTime() + TOKEN_TIME))
                         .setIssuedAt(date)
                         .signWith(key, signatureAlgorithm)
