@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SpringExtension.class)
@@ -19,10 +20,14 @@ class PasswordEncoderTest {
         String rawPassword = "testPassword";
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
-        // when
-        boolean matches = passwordEncoder.matches(encodedPassword, rawPassword);
+        // when(matches 메서드의 첫번째 파라미터는 평문이고, 두번쨰 파라미터는 변환된 코드이다.
+        boolean matches = passwordEncoder.matches(rawPassword, encodedPassword);
+        boolean notMatches = passwordEncoder.matches(encodedPassword, rawPassword);
+        boolean notMatches2 = passwordEncoder.matches("wrongPassword", encodedPassword);
 
         // then
         assertTrue(matches);
+        assertFalse(notMatches);
+        assertFalse(notMatches2);
     }
 }
