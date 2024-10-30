@@ -1,5 +1,6 @@
 package org.example.expert.domain.manager.service;
 
+import org.example.expert.domain.auth.dto.request.SignupRequest;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.manager.dto.request.ManagerSaveRequest;
@@ -7,6 +8,7 @@ import org.example.expert.domain.manager.dto.response.ManagerResponse;
 import org.example.expert.domain.manager.dto.response.ManagerSaveResponse;
 import org.example.expert.domain.manager.entity.Manager;
 import org.example.expert.domain.manager.repository.ManagerRepository;
+import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.entity.User;
@@ -75,8 +77,11 @@ class ManagerServiceTest {
     public void manager_목록_조회에_성공한다() {
         // given
         long todoId = 1L;
-        User user = new User("user1@example.com", "password", UserRole.USER);
-        Todo todo = new Todo("Title", "Contents", "Sunny", user);
+        SignupRequest signupRequest = new SignupRequest("user1@example.com","password","USER");
+        User user = new User(signupRequest, "password", UserRole.USER);
+
+        TodoSaveRequest todoSaveRequest = new TodoSaveRequest("title","contents");
+        Todo todo = new Todo(todoSaveRequest, "Sunny", user);
         ReflectionTestUtils.setField(todo, "id", todoId);
 
         Manager mockManager = new Manager(todo.getUser(), todo);
@@ -101,10 +106,12 @@ class ManagerServiceTest {
         User user = User.fromAuthUser(authUser);  // 일정을 만든 유저
 
         long todoId = 1L;
-        Todo todo = new Todo("Test Title", "Test Contents", "Sunny", user);
+        TodoSaveRequest todoSaveRequest = new TodoSaveRequest("title","contents");
+        Todo todo = new Todo(todoSaveRequest, "Sunny", user);
 
         long managerUserId = 2L;
-        User managerUser = new User("b@b.com", "password", UserRole.USER);  // 매니저로 등록할 유저
+        SignupRequest signupRequest = new SignupRequest("user1@example.com","password","USER");
+        User managerUser = new User(signupRequest, "password", UserRole.USER);  // 매니저로 등록할 유저
         ReflectionTestUtils.setField(managerUser, "id", managerUserId);
 
         ManagerSaveRequest managerSaveRequest = new ManagerSaveRequest(managerUserId); // request dto 생성
