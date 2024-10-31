@@ -1,6 +1,5 @@
 package org.example.expert.domain.common.exist;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.manager.entity.Manager;
@@ -9,8 +8,9 @@ import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.entity.User;
 import org.example.expert.domain.user.repository.UserRepository;
+import org.springframework.stereotype.Component;
 
-@Getter
+@Component
 @RequiredArgsConstructor
 public class ExistCheck {
     private final TodoRepository todoRepository;
