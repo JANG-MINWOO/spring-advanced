@@ -3,6 +3,7 @@ package org.example.expert.domain.manager.service;
 import org.example.expert.domain.auth.dto.request.SignupRequest;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
+import org.example.expert.domain.common.exist.ExistCheck;
 import org.example.expert.domain.manager.dto.request.ManagerSaveRequest;
 import org.example.expert.domain.manager.dto.response.ManagerResponse;
 import org.example.expert.domain.manager.dto.response.ManagerSaveResponse;
@@ -37,18 +38,20 @@ class ManagerServiceTest {
     private UserRepository userRepository;
     @Mock
     private TodoRepository todoRepository;
+    @Mock
+    private ExistCheck existCheck;
     @InjectMocks
     private ManagerService managerService;
 
     @Test
-    public void manager_목록_조회_시_Todo가_없다면_NPE_에러를_던진다() {
+    public void manager_목록_조회_시_Todo가_없다면_IRE_에러를_던진다() {
         // given
-        long todoId = 1L;
-        given(todoRepository.findById(todoId)).willReturn(Optional.empty());
+        long todoId = 1L; //manager 목록을 조회하기 전에 Todo 가 있는지 먼저 조회해야한다.
+        given(existCheck.isExistTodo(todoId)).willThrow(new InvalidRequestException("Todo not found"));
 
         // when & then
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> managerService.getManagers(todoId));
-        assertEquals("Manager not found", exception.getMessage());
+        assertEquals("Todo not found", exception.getMessage());
     }
 
     @Test
@@ -63,7 +66,7 @@ class ManagerServiceTest {
 
         ManagerSaveRequest managerSaveRequest = new ManagerSaveRequest(managerUserId);
 
-        given(todoRepository.findById(todoId)).willReturn(Optional.of(todo));
+        given(existCheck.isExistTodo(todoId)).willReturn(todo);
 
         // when & then
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () ->

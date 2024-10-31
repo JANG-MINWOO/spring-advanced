@@ -23,7 +23,7 @@ import java.util.List;
 public class CommentService {
 
     private final CommentRepository commentRepository;
-    private ExistCheck existCheck;
+    private final ExistCheck existCheck;
 
     @Transactional
     public CommentSaveResponse saveComment(AuthUser authUser, long todoId, CommentSaveRequest commentSaveRequest) {
